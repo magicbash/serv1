@@ -9,16 +9,16 @@ import java.util.Calendar;
 
 import src.com.magicbash.server.Server;
 
-public class Log extends ChannelTrafficShapingHandler{
-	
-	public Log(long checkInterval) {
+public class Log extends ChannelTrafficShapingHandler{			//Log class with typical getters and setters
+																//Extend ChannelTrafficShapinghandler to getting 
+	public Log(long checkInterval) {							//traffic statistic 
 		
 		super(checkInterval);
 		// TODO Auto-generated constructor stub
 	}
 	private boolean isAdd = false;
 	private String ip;
-	private String uri = "undef";
+	private String uri;
 	private Calendar time;
 	private long sendBytes;
 	private long reciveBytes;
@@ -27,7 +27,7 @@ public class Log extends ChannelTrafficShapingHandler{
 	
 	
 	@Override
-	protected void doAccounting(TrafficCounter counter) {
+	protected void doAccounting(TrafficCounter counter) {		//override method with setting statistic data
 		
 		this.sendBytes = counter.cumulativeWrittenBytes();
 		this.reciveBytes = counter.cumulativeReadBytes();

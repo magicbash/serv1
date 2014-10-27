@@ -2,12 +2,9 @@ package src.com.magicbash.server;
 
 import java.util.Calendar;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 
 import src.com.magicbash.requsts.RequsetHandler;
-import src.com.magicbash.stats.Redirects;
 import src.com.magicbash.stats.Requests;
-
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -21,36 +18,65 @@ import io.netty.handler.codec.http.LastHttpContent;
 
 public class ServerHandler extends SimpleChannelInboundHandler<HttpRequest> {
 
-	private String uri;
+	
+
 	@Override
 	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
 		// TODO Auto-generated method stub
-		Server.STAT.decNumOfConnections();
+		Server.STAT.decNumOfConnections();// decrementing number of open
+										  // connections when channel inactive
 		super.channelInactive(ctx);
 	}
-	
+
 	@Override
-	protected void channelRead0(final ChannelHandlerContext ctx, HttpRequest request)
-			throws Exception {
+	protected void channelRead0(final ChannelHandlerContext ctx,
+			HttpRequest request) throws Exception {
 		// TODO Auto-generated method stub
-		this.channelActive(ctx);
-		Test.LOG.log(Level.INFO, "123");
-		FullHttpResponse response = new DefaultFullHttpResponse(
+		FullHttpResponse response = new DefaultFullHttpResponse( //creating new response
 				HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
-		response.headers().set(HttpHeaders.Names.CONTENT_TYPE,
-				"text/html; charset=UTF-8");
-		boolean ready = true;
-		Test.LOG.log(Level.INFO, request.getUri());
-		uri = request.getUri();
-		String ip = ctx.channel().remoteAddress().toString();
-		Server.STAT.addRequest(new Requests(ip.substring(0, ip.length() - 6),
+		boolean ready = true; 									 //does response ready to flush
+		String ip = ctx.channel().remoteAddress().toString();	 //getting ip from client
+		String uri = request.getUri();							 //getting uri
+		
+		Server.STAT.addRequest(new Requests(ip.substring(0, ip.length() - 6),//adding new request to statistic
 				Calendar.getInstance()));
-		switch (uri) {
+		
+		response.headers().set(HttpHeaders.Names.CONTENT_TYPE, 	 //setting to response information about type
+				"text/html; charset=UTF-8");
+		
+		switch (uri) {	
+
 		case "/hello":
-			response.content().writeBytes(RequsetHandler.Hello());
-			ready = false;
-			Test.LOG.log(Level.INFO, "hello");
-			ctx.executor().schedule(new Runnable() {
+			response.content().writeBytes(RequsetHandler.Hello());//write hello world
+			ready = false;										  //now our respons not ready to flush
+			break;
+
+		case "/status":
+			response.content().writeBytes(RequsetHandler.Stat());//write statistic to response
+			break;
+
+		default:
+			// redir
+			if (uri.matches("\\/redirect\\?url=.+")) {			 	//check uri on redirecting
+				response.setStatus(HttpResponseStatus.FOUND);		//change response status 
+				response.headers().set(HttpHeaders.Names.LOCATION,	//redirecting
+						RequsetHandler.Redir(uri));
+
+			} else {			
+				response.setStatus(HttpResponseStatus.NOT_FOUND);	//change response status 
+				response.content().writeBytes(RequsetHandler.NotFound());//write 404 error
+			}
+			break;
+		}
+
+		ctx.write(response);//writing response
+		if (ready) { 															//flushing
+			ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT).addListener(
+					ChannelFutureListener.CLOSE);
+		}
+		else {																	//if response not ready 
+			ctx.executor().schedule(new Runnable() {							//to flushing
+																				//wait 10 seconds
 
 				@Override
 				public void run() {
@@ -59,40 +85,9 @@ public class ServerHandler extends SimpleChannelInboundHandler<HttpRequest> {
 							.addListener(ChannelFutureListener.CLOSE);
 				}
 			}, 10, TimeUnit.SECONDS);
-			break;
-
-		case "/status":
-
-			Test.LOG.log(Level.INFO, "status");
-			response.content().writeBytes(RequsetHandler.Stat());// statistic
-			break;
-
-		default:
-			// redir
-			if (uri.matches("\\/redirect\\?url=.+")) {
-				Test.LOG.log(Level.INFO, "redir");// redirecting
-				response.setStatus(HttpResponseStatus.FOUND);
-				String redirectURL = uri.substring("/redirect?url=".length());
-				response.headers().set(HttpHeaders.Names.LOCATION, redirectURL);
-				Server.STAT.addRedirect(new Redirects(redirectURL));
-
-			} else {
-				response.setStatus(HttpResponseStatus.NOT_FOUND);
-				response.content().writeBytes("404 Page not found".getBytes());
-				Test.LOG.log(Level.INFO, "404");
-			}
-			break;
 		}
-		ctx.write(response);
-		if (ready) {
-			ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT).addListener(
-					ChannelFutureListener.CLOSE);
-		}
-		Test.LOG.log(Level.INFO, response.toString());
-		
-
 	}
-	
+
 	public ServerHandler() {
 
 	}

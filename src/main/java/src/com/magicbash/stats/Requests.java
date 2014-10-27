@@ -35,22 +35,5 @@ public class Requests {
 	public void setTime(Calendar cal){
 		this.time = cal;
 	}
-	/*public boolean equals(Requests rq) {
-		// TODO Auto-generated method stub
-		if (this.getIp() == rq.getIp()){
-			Test.LOG.log(Level.INFO, this.getIp());
-			Test.LOG.log(Level.INFO, rq.getIp());
-			return true;
-		}
-		else return false;
-	}*/
-	@Override
-	public boolean equals(Object obj) {
-		// TODO Auto-generated method stub
-		Requests rq = (Requests) obj;
-		if (this.getIp() == rq.getIp()){
-			return true;
-		}
-		else return false;
-	}
+
 }

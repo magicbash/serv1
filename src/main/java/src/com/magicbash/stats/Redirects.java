@@ -1,6 +1,6 @@
 package src.com.magicbash.stats;
 
-public class Redirects {
+public class Redirects {						//redirect class with typical getters and setters
 	private String uri;
 	private int numOfRedir = 0;
 	

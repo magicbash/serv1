@@ -14,7 +14,7 @@ public class Statistic {												//class with statistic
 	private HashMap<String, Redirects> red = new HashMap<String, Redirects>();
 	private Queue<Log> log = new ConcurrentLinkedQueue<Log>();
 
-	public void incReq() {
+	private void incReq() {
 		this.numOfRequests.incrementAndGet();
 	}
 

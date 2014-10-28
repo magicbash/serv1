@@ -4,7 +4,7 @@ package src.com.magicbash.stats;
 import java.util.Calendar;
 
 
-public class Requests {
+public class Requests {									//request class with typical getters and setters
 	private String ip;
 	private int numOfRequests = 0;
 	private Calendar time;
